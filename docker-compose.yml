@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fixit_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: fixit_user
+      POSTGRES_PASSWORD: fixit_pass
+      POSTGRES_DB: fixit_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
