@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { Ticket } from './ticket.entity';
 
@@ -14,5 +14,15 @@ export class TicketsController {
   @Post()
   create(@Body() data: Partial<Ticket>) {
     return this.ticketsService.create(data);
+  }
+
+  @Patch(':id')
+  updateStatus(@Param('id') id: string, @Body('status') status: string) {
+    return this.ticketsService.updateStatus(+id, status);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.ticketsService.remove(+id);
   }
 }

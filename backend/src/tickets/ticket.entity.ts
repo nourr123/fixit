@@ -20,6 +20,9 @@ export class Ticket {
   @Column({ length: 20, default: 'Open' })
   status!: string;
 
+  @Column({ default: false })
+  needs_review!: boolean;
+
   @CreateDateColumn()
   created_at!: Date;
 }

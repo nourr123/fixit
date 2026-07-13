@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketsModule } from './tickets/tickets.module';
+import { AuthModule } from './auth/auth.module';
+import { Manager } from './managers/manager.entity';
 
 @Module({
   imports: [
@@ -16,7 +18,9 @@ import { TicketsModule } from './tickets/tickets.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    TypeOrmModule.forFeature([Manager]),
     TicketsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

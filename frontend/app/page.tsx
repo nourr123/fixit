@@ -1,65 +1,111 @@
-import Image from "next/image";
+import Link from 'next/link';
+import Image from 'next/image';
+import SiteNav from './components/SiteNav';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="h-screen flex flex-col overflow-hidden">
+      <SiteNav />
+
+      <div className="flex-1 grid lg:grid-cols-2 items-center px-6 lg:px-16 min-h-0 gap-10">
+        {/* Left — copy + single CTA */}
+        <div className="max-w-md">
+          <p
+            className="text-[11px] tracking-[0.18em] uppercase mb-4"
+            style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}
+          >
+            Property Maintenance, Simplified
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <h1
+            className="text-4xl sm:text-5xl leading-tight mb-5"
+            style={{ fontFamily: 'var(--font-fraunces)', fontWeight: 600, color: 'var(--ink)' }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            Tell us what&apos;s wrong.
+            <br />
+            We&apos;ll take it from here.
+          </h1>
+          <p
+            className="text-sm leading-relaxed mb-8"
+            style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}
+          >
+            FixIt reads every maintenance report for urgency the moment it&apos;s
+            submitted, then routes it straight to the property manager&apos;s board —
+            no tenant account required.
+          </p>
+
+          {/* Single CTA — back to the original slate style */}
+          <Link
+            href="/submit-ticket"
+            className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-medium rounded-sm transition"
+            style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
+          >
+            Report an issue
+            <span aria-hidden>→</span>
+          </Link>
+<div
+            className="mt-10 pt-6 flex gap-6"
+            style={{ borderTop: '1px solid var(--line)' }}
+          >
+            {[
+              { n: '01', title: 'Submit', text: 'Describe the issue in under a minute' },
+              { n: '02', title: 'Auto-triage', text: 'Priority assigned instantly by the parser' },
+              { n: '03', title: 'Resolved', text: 'Manager tracks it live on the board' },
+            ].map((step, i) => (
+              <div key={step.n} className="flex-1 relative">
+                <p
+                  className="text-[11px] font-semibold mb-1.5"
+                  style={{ color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)' }}
+                >
+                  {step.n}
+                </p>
+                <p
+                  className="text-sm font-semibold mb-1"
+                  style={{ color: 'var(--ink)', fontFamily: 'var(--font-inter)' }}
+                >
+                  {step.title}
+                </p>
+                <p
+                  className="text-[11px] leading-snug"
+                  style={{ color: '#8A8478', fontFamily: 'var(--font-inter)' }}
+                >
+                  {step.text}
+                </p>
+                {i < 2 && (
+                  <span
+                    className="hidden lg:block absolute top-1 -right-3 text-xs"
+                    style={{ color: 'var(--line)' }}
+                  >
+                    ›
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right — bigger circular photo */}
+        <div className="hidden lg:flex items-center justify-center">
+          <div className="relative w-[480px] h-[480px]">
+            {/* decorative ring behind the photo */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ border: '1px solid var(--line)', transform: 'scale(1.06)' }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            {/* the photo itself, clipped to a circle */}
+            <div className="relative w-full h-full rounded-full overflow-hidden shadow-lg">
+              <Image
+                src="/hero-photo.jpg"
+                alt="Property maintenance"
+                fill
+                sizes="480px"
+                className="object-cover"
+                priority
+              />
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
