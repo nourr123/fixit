@@ -2,32 +2,49 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from './ticket.entity';
-import { classifyPriority } from './ticket-priority.util';
+import { classifyPriority, PriorityResult } from './ticket-priority.util';
 import { classifyPriorityWithLLM } from './llm-priority.util';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class TicketsService {
   constructor(
     @InjectRepository(Ticket)
     private ticketsRepository: Repository<Ticket>,
+    private mailService: MailService,
   ) {}
 
   findAll(): Promise<Ticket[]> {
     return this.ticketsRepository.find({ order: { created_at: 'DESC' } });
   }
 
-  async create(data: Partial<Ticket>): Promise<Ticket> {
-    const description = data.description ?? '';
+  // Used by the tenant dashboard — only tickets linked to this tenant's account.
+  findMine(tenantId: number): Promise<Ticket[]> {
+    return this.ticketsRepository.find({
+      where: { tenant_id: tenantId },
+      order: { created_at: 'DESC' },
+    });
+  }
 
+  private async resolvePriority(description: string): Promise<PriorityResult> {
     const llmResult = await classifyPriorityWithLLM(description);
-    const result = llmResult ?? classifyPriority(description);
+    return llmResult ?? classifyPriority(description);
+  }
+
+  async create(data: Partial<Ticket>, tenantId: number | null): Promise<Ticket> {
+    const result = await this.resolvePriority(data.description ?? '');
 
     const ticket = this.ticketsRepository.create({
       ...data,
+      tenant_id: tenantId,
       priority: result.priority,
       needs_review: result.needsReview,
     });
     return this.ticketsRepository.save(ticket);
+  }
+
+  async previewPriority(description: string): Promise<PriorityResult> {
+    return this.resolvePriority(description);
   }
 
   async updateStatus(id: number, status: string): Promise<Ticket> {
@@ -35,8 +52,23 @@ export class TicketsService {
     if (!ticket) {
       throw new NotFoundException(`Ticket ${id} not found`);
     }
+
+    const previousStatus = ticket.status;
     ticket.status = status;
-    return this.ticketsRepository.save(ticket);
+    const updated = await this.ticketsRepository.save(ticket);
+
+    // Fire-and-forget: only notify if the status actually changed and we have an email on file.
+    if (previousStatus !== status && updated.tenant_email) {
+      void this.mailService.sendTicketStatusUpdate({
+        to: updated.tenant_email,
+        tenantName: updated.tenant_name,
+        ticketId: updated.id,
+        description: updated.description,
+        newStatus: updated.status,
+      });
+    }
+
+    return updated;
   }
 
   async remove(id: number): Promise<{ id: number }> {

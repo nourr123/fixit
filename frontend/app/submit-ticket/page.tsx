@@ -1,23 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SiteNav from '../components/SiteNav';
 
-type Signal = 'idle' | 'low' | 'medium' | 'high';
+type Signal = 'idle' | 'loading' | 'low' | 'medium' | 'high';
 
-const HIGH_WORDS = ['flood', 'fire', 'smoke', 'gas', 'burst', 'no heat', 'no power', 'leak', 'overflow', 'electrical', 'spark', 'ceiling'];
-const MEDIUM_WORDS = ['broken', 'not working', 'stopped', 'wont', "won't", 'noise', 'stuck', 'clog'];
-
-function previewSignal(text: string): Signal {
-  const t = text.toLowerCase();
-  if (t.length < 8) return 'idle';
-  if (HIGH_WORDS.some((w) => t.includes(w))) return 'high';
-  if (MEDIUM_WORDS.some((w) => t.includes(w))) return 'medium';
-  return 'low';
-}
+const API_URL = 'http://localhost:3000';
+const DEBOUNCE_MS = 900;
+const MIN_LENGTH = 8;
 
 const SIGNAL_META: Record<Signal, { label: string; color: string; note: string }> = {
-  idle: { label: '—', color: '#A9A296', note: 'Keep describing the issue for a preliminary read.' },
+  idle: { label: '—', color: '#A9A296', note: 'Keep describing the issue to get a priority read.' },
+  loading: { label: '…', color: '#A9A296', note: 'Analyzing…' },
   low: { label: 'Low', color: 'var(--low)', note: 'Reads as routine. A manager will confirm.' },
   medium: { label: 'Medium', color: 'var(--medium)', note: 'Reads as non-urgent but active. A manager will confirm.' },
   high: { label: 'High', color: 'var(--high)', note: 'Reads as urgent. Flagged for immediate review.' },
@@ -28,24 +22,94 @@ export default function SubmitTicketPage() {
   const [unitNumber, setUnitNumber] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [signal, setSignal] = useState<Signal>('idle');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const signal = useMemo(() => previewSignal(description), [description]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
+
+  // Detect a logged-in tenant and pre-fill their name
+  useEffect(() => {
+    const token = localStorage.getItem('fixit_tenant_token');
+    if (token) {
+      setIsLoggedIn(true);
+      setTenantName(localStorage.getItem('fixit_tenant_name') || '');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (description.trim().length < MIN_LENGTH) {
+      setSignal('idle');
+      return;
+    }
+
+    setSignal('loading');
+    const currentRequestId = ++requestIdRef.current;
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/tickets/preview-priority`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description }),
+        });
+        if (!res.ok) throw new Error('Preview failed');
+        const data = await res.json();
+
+        if (currentRequestId !== requestIdRef.current) return;
+
+        const mapped: Signal =
+          data.priority === 'High' ? 'high' : data.priority === 'Low' ? 'low' : 'medium';
+        setSignal(mapped);
+      } catch (err) {
+        console.error(err);
+        if (currentRequestId === requestIdRef.current) {
+          setSignal('idle');
+        }
+      }
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [description]);
+
   const meta = SIGNAL_META[signal];
+
+  const handleLogout = () => {
+    localStorage.removeItem('fixit_tenant_token');
+    localStorage.removeItem('fixit_tenant_name');
+    localStorage.removeItem('fixit_tenant_email');
+    window.location.href = '/submit-ticket';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
     try {
-      const res = await fetch('http://localhost:3000/tickets', {
+      const token = localStorage.getItem('fixit_tenant_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_URL}/tickets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenant_name: tenantName, unit_number: unitNumber, description }),
+        headers,
+        body: JSON.stringify({
+          tenant_name: tenantName,
+          unit_number: unitNumber,
+          description,
+        }),
       });
       if (!res.ok) throw new Error('Failed to submit ticket');
       setStatus('success');
-      setTenantName('');
+      if (!isLoggedIn) {
+        setTenantName('');
+      }
       setUnitNumber('');
       setDescription('');
+      setSignal('idle');
     } catch (err) {
       console.error(err);
       setStatus('error');
@@ -61,7 +125,6 @@ export default function SubmitTicketPage() {
           className="w-full max-w-md bg-white relative"
           style={{ border: '1px solid var(--line)', boxShadow: '0 1px 2px rgba(35,40,46,0.04)' }}
         >
-          {/* header */}
           <div
             className="flex items-center justify-between px-6 py-4"
             style={{ background: 'var(--slate)', color: '#F5F3EE' }}
@@ -92,11 +155,27 @@ export default function SubmitTicketPage() {
             </span>
           </div>
 
-          {/* perforation line */}
           <div className="relative h-0 border-t border-dashed" style={{ borderColor: 'var(--line)' }}>
             <div className="absolute -left-2 -top-2 w-4 h-4 rounded-full" style={{ background: 'var(--paper)' }} />
             <div className="absolute -right-2 -top-2 w-4 h-4 rounded-full" style={{ background: 'var(--paper)' }} />
           </div>
+
+          {isLoggedIn && (
+            <div
+              className="mx-6 mt-4 px-3 py-2 rounded-sm text-xs flex items-center justify-between gap-3"
+              style={{ background: 'rgba(44,74,124,0.06)', color: 'var(--accent-blue)', fontFamily: 'var(--font-inter)' }}
+            >
+              <span>Signed in as {tenantName} — this ticket will be linked to your account.</span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="shrink-0 underline hover:opacity-70 transition"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Log out
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-3.5">
             <div>
@@ -108,9 +187,15 @@ export default function SubmitTicketPage() {
                 value={tenantName}
                 onChange={(e) => setTenantName(e.target.value)}
                 required
+                readOnly={isLoggedIn}
                 placeholder="Full name"
                 className="w-full px-3 py-2 text-sm bg-transparent outline-none focus:ring-2 rounded-sm transition"
-                style={{ border: '1px solid var(--line)', color: 'var(--ink)', fontFamily: 'var(--font-inter)' }}
+                style={{
+                  border: '1px solid var(--line)',
+                  color: 'var(--ink)',
+                  fontFamily: 'var(--font-inter)',
+                  opacity: isLoggedIn ? 0.7 : 1,
+                }}
               />
             </div>
 
@@ -136,7 +221,9 @@ export default function SubmitTicketPage() {
                 </label>
                 <div className="flex items-center gap-1.5">
                   <span
-                    className="w-1.5 h-1.5 rounded-full transition-colors duration-300"
+                    className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                      signal === 'loading' ? 'animate-pulse' : ''
+                    }`}
                     style={{ background: meta.color }}
                   />
                   <span className="text-[11px]" style={{ fontFamily: 'var(--font-mono)', color: meta.color }}>
@@ -175,6 +262,19 @@ export default function SubmitTicketPage() {
             {status === 'error' && (
               <p className="text-sm text-center" style={{ color: 'var(--high)' }}>
                 Couldn&apos;t submit. Check your connection and try again.
+              </p>
+            )}
+
+            {!isLoggedIn && (
+              <p className="text-[12px] text-center" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
+                <a href="/tenant-login" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>
+                  Log in
+                </a>{' '}
+                or{' '}
+                <a href="/tenant-register" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>
+                  create an account
+                </a>{' '}
+                to track this ticket later.
               </p>
             )}
           </form>

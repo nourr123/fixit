@@ -13,6 +13,7 @@ type Ticket = {
   description: string;
   priority: Priority;
   status: Status;
+  needs_review: boolean;
 };
 
 const API_URL = 'http://localhost:3000';
@@ -270,7 +271,9 @@ export default function DashboardPage() {
                           className="group relative rounded-md p-4 pl-5 cursor-grab active:cursor-grabbing transition-all hover:-translate-y-0.5 hover:rotate-[0.4deg]"
                           style={{
                             background: '#FFFFFF',
-                            border: '1px solid var(--line)',
+                            border: ticket.needs_review
+                              ? '1px solid var(--priority-medium, #D9A404)'
+                              : '1px solid var(--line)',
                             boxShadow: '0 1px 2px rgba(35,40,46,0.05)',
                             opacity: draggedId === ticket.id ? 0.4 : 1,
                           }}
@@ -294,6 +297,23 @@ export default function DashboardPage() {
                           >
                             ✕
                           </button>
+
+                          {ticket.needs_review && (
+                            <div
+                              className="inline-flex items-center gap-1 mb-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide"
+                              style={{
+                                background: 'rgba(217, 164, 4, 0.12)',
+                                color: 'var(--priority-medium, #D9A404)',
+                                fontFamily: 'var(--font-inter)',
+                              }}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M12 9v4M12 17h.01" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              Needs Review
+                            </div>
+                          )}
 
                           <div className="flex items-center justify-between mb-2 pr-4">
                             <span
