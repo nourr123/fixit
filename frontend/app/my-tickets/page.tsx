@@ -41,7 +41,7 @@ function EmptyState() {
       
         <a href="/submit-ticket"
         className="inline-block text-sm px-5 py-2.5 rounded-md"
-        style={{ background: 'var(--accent-blue)', color: '#FFFFFF' }}
+        style={{ background: 'var(--slate)', color: '#F5F3EE' }}
       >
         Report an Issue
       </a>
@@ -97,7 +97,7 @@ export default function MyTicketsPage() {
   useEffect(() => {
     const token = localStorage.getItem('fixit_tenant_token');
     if (!token) {
-      router.push('/tenant-login');
+      router.push('/login');
       return;
     }
     setTenantName(localStorage.getItem('fixit_tenant_name') || '');
@@ -119,7 +119,7 @@ export default function MyTicketsPage() {
         });
         if (res.status === 401) {
           localStorage.removeItem('fixit_tenant_token');
-          router.push('/tenant-login');
+          router.push('/login');
           return;
         }
         if (!res.ok) {
@@ -142,7 +142,7 @@ export default function MyTicketsPage() {
     localStorage.removeItem('fixit_tenant_token');
     localStorage.removeItem('fixit_tenant_name');
     localStorage.removeItem('fixit_tenant_email');
-    router.push('/tenant-login');
+    router.push('/login');
   };
 
   if (!checkedAuth) {
@@ -172,40 +172,35 @@ export default function MyTicketsPage() {
           </span>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="text-sm px-5 py-2.5 rounded-md transition-colors"
-          style={{ background: 'var(--ink)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
-        >
-          Log out
-        </button>
+        <div className="flex items-center gap-3">
+          
+            <a href="/submit-ticket"
+            className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-md transition hover:opacity-90"
+            style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
+          >
+            Report an issue
+            <span aria-hidden>→</span>
+          </a>
+          <button
+            onClick={handleLogout}
+            className="text-sm px-5 py-2.5 rounded-md transition-colors hover:opacity-90"
+            style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
+          >
+            Log out
+          </button>
+        </div>
       </header>
 
       <section className="max-w-3xl mx-auto w-full px-6 lg:px-10 flex-1 py-12 relative">
-        <div className="flex items-start justify-between flex-wrap gap-4 mb-2">
-          <div>
-            <h1
-              className="text-3xl sm:text-4xl mb-2"
-              style={{ fontFamily: 'var(--font-fraunces)', fontWeight: 700, color: 'var(--ink)' }}
-            >
-              My Reported Issues
-            </h1>
-            <p className="text-sm" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
-              {tenantName ? 'Signed in as ' + tenantName : ''}
-            </p>
-          </div>
-
-          
-            <a href="/submit-ticket"
-            className="shrink-0 inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-md transition hover:opacity-90"
-            style={{ background: 'var(--accent-blue)', color: '#FFFFFF', fontFamily: 'var(--font-inter)' }}
-          >
-            Report an Issue
-            <span aria-hidden>+</span>
-          </a>
-        </div>
-
-        <div className="mb-8" />
+        <h1
+          className="text-3xl sm:text-4xl mb-2"
+          style={{ fontFamily: 'var(--font-fraunces)', fontWeight: 700, color: 'var(--ink)' }}
+        >
+          My Reported Issues
+        </h1>
+        <p className="text-sm mb-8" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
+          {tenantName ? 'Signed in as ' + tenantName : ''}
+        </p>
 
         {loadError ? (
           <div

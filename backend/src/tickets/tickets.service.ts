@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket } from './ticket.entity';
+import { Tenant } from '../tenants/tenant.entity';
 import { classifyPriority, PriorityResult } from './ticket-priority.util';
 import { classifyPriorityWithLLM } from './llm-priority.util';
 import { MailService } from '../mail/mail.service';
@@ -11,6 +12,8 @@ export class TicketsService {
   constructor(
     @InjectRepository(Ticket)
     private ticketsRepository: Repository<Ticket>,
+    @InjectRepository(Tenant)
+    private tenantsRepository: Repository<Tenant>,
     private mailService: MailService,
   ) {}
 
@@ -18,7 +21,6 @@ export class TicketsService {
     return this.ticketsRepository.find({ order: { created_at: 'DESC' } });
   }
 
-  // Used by the tenant dashboard — only tickets linked to this tenant's account.
   findMine(tenantId: number): Promise<Ticket[]> {
     return this.ticketsRepository.find({
       where: { tenant_id: tenantId },
@@ -34,9 +36,20 @@ export class TicketsService {
   async create(data: Partial<Ticket>, tenantId: number | null): Promise<Ticket> {
     const result = await this.resolvePriority(data.description ?? '');
 
+    // If the tenant is logged in, pull their email from their account
+    // instead of relying on the form to send it (it doesn't, by design).
+    let tenantEmail: string | null = data.tenant_email ?? null;
+    if (tenantId !== null) {
+      const tenant = await this.tenantsRepository.findOneBy({ id: tenantId });
+      if (tenant) {
+        tenantEmail = tenant.email;
+      }
+    }
+
     const ticket = this.ticketsRepository.create({
       ...data,
       tenant_id: tenantId,
+      tenant_email: tenantEmail,
       priority: result.priority,
       needs_review: result.needsReview,
     });
@@ -57,7 +70,6 @@ export class TicketsService {
     ticket.status = status;
     const updated = await this.ticketsRepository.save(ticket);
 
-    // Fire-and-forget: only notify if the status actually changed and we have an email on file.
     if (previousStatus !== status && updated.tenant_email) {
       void this.mailService.sendTicketStatusUpdate({
         to: updated.tenant_email,

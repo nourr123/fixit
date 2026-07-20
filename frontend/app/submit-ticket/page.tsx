@@ -82,7 +82,7 @@ export default function SubmitTicketPage() {
     localStorage.removeItem('fixit_tenant_token');
     localStorage.removeItem('fixit_tenant_name');
     localStorage.removeItem('fixit_tenant_email');
-    window.location.href = '/submit-ticket';
+    window.location.href = '/login';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,18 +162,10 @@ export default function SubmitTicketPage() {
 
           {isLoggedIn && (
             <div
-              className="mx-6 mt-4 px-3 py-2 rounded-sm text-xs flex items-center justify-between gap-3"
+              className="mx-6 mt-4 px-3 py-2 rounded-sm text-xs"
               style={{ background: 'rgba(44,74,124,0.06)', color: 'var(--accent-blue)', fontFamily: 'var(--font-inter)' }}
             >
-              <span>Signed in as {tenantName} — this ticket will be linked to your account.</span>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="shrink-0 underline hover:opacity-70 transition"
-                style={{ fontFamily: 'var(--font-inter)' }}
-              >
-                Log out
-              </button>
+              Signed in as {tenantName} — this ticket will be linked to your account.
             </div>
           )}
 
@@ -266,17 +258,10 @@ export default function SubmitTicketPage() {
             )}
 
             {!isLoggedIn && (
-              <p className="text-[12px] text-center" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
-                <a href="/tenant-login" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>
-                  Log in
-                </a>{' '}
-                or{' '}
-                <a href="/tenant-register" style={{ color: 'var(--accent-blue)', textDecoration: 'underline' }}>
-                  create an account
-                </a>{' '}
-                to track this ticket later.
-              </p>
-            )}
+  <p className="text-[12px] text-center" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
+    Log in or create an account to track this ticket later.
+  </p>
+)}
           </form>
         </div>
       </div>

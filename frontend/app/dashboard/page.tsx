@@ -70,7 +70,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const token = localStorage.getItem('fixit_manager_token');
     if (!token) {
-      router.push('/login');
+      router.push('/manager-login');
       return;
     }
     setCheckedAuth(true);
@@ -98,9 +98,9 @@ export default function DashboardPage() {
     loadTickets();
   }, [checkedAuth]);
 
-  const handleLogout = () => {
+ const handleLogout = () => {
     localStorage.removeItem('fixit_manager_token');
-    router.push('/login');
+    router.push('/manager-login');
   };
 
   const handleDrop = async (status: Status) => {
