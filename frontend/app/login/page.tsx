@@ -8,11 +8,30 @@ type Role = 'tenant' | 'manager';
 
 const API_URL = 'http://localhost:3000';
 
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path
+        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a19.6 19.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a19.7 19.7 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line x1="1" y1="1" x2="23" y2="23" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = useState<Role>('tenant');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
 
   const switchRole = (next: Role) => {
@@ -52,6 +71,10 @@ export default function LoginPage() {
     }
   };
 
+  const forgotPasswordHref = email
+    ? `/forgot-password?email=${encodeURIComponent(email)}`
+    : '/forgot-password';
+
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden" style={{ background: 'var(--paper, #F5F3EE)' }}>
       {/* Left — logo + form panel */}
@@ -79,10 +102,7 @@ export default function LoginPage() {
               Sign in to your FixIt account
             </h1>
 
-            <div
-              className="grid grid-cols-2 gap-1 p-1 rounded-md mb-6"
-              style={{ background: '#EDEAE1' }}
-            >
+            <div className="grid grid-cols-2 gap-1 p-1 rounded-md mb-6" style={{ background: '#EDEAE1' }}>
               <button
                 type="button"
                 onClick={() => switchRole('tenant')}
@@ -128,18 +148,40 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="block text-[12px] uppercase tracking-wide mb-1.5" style={{ color: 'var(--slate)' }}>
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 text-base bg-transparent outline-none focus:ring-2 rounded-sm transition"
-                  style={{ border: '1px solid var(--line)', color: 'var(--ink)', fontFamily: 'var(--font-inter)' }}
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[12px] uppercase tracking-wide" style={{ color: 'var(--slate)' }}>
+                    Password
+                  </label>
+                  {role === 'tenant' && (
+                    <Link
+                      href={forgotPasswordHref}
+                      className="text-[12px]"
+                      style={{ color: 'var(--accent-blue)', fontFamily: 'var(--font-inter)' }}
+                    >
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 pr-11 text-base bg-transparent outline-none focus:ring-2 rounded-sm transition"
+                    style={{ border: '1px solid var(--line)', color: 'var(--ink)', fontFamily: 'var(--font-inter)' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: 'var(--slate)' }}
+                  >
+                    <EyeIcon open={showPassword} />
+                  </button>
+                </div>
               </div>
 
               <button
@@ -170,7 +212,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right — logo panel (fond bleu, logo blanc pour contraste) */}
+      {/* Right — logo panel */}
       <div
         className="hidden lg:flex flex-1 min-h-0 items-center justify-center order-1 lg:order-2"
         style={{ background: 'var(--accent-blue)' }}

@@ -22,4 +22,17 @@ export class AuthController {
     const tenant = await this.authService.validateTenant(dto.email, dto.password);
     return this.authService.loginTenant(tenant);
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: { email: string }) {
+    await this.authService.requestPasswordReset(dto.email);
+    // Always return the same generic response, whether or not the email exists.
+    return { message: 'If an account exists with this email, a reset link has been sent.' };
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: { token: string; password: string }) {
+    await this.authService.resetPassword(dto.token, dto.password);
+    return { message: 'Password updated successfully.' };
+  }
 }

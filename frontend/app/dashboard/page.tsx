@@ -100,7 +100,7 @@ export default function DashboardPage() {
 
  const handleLogout = () => {
     localStorage.removeItem('fixit_manager_token');
-    router.push('/manager-login');
+    router.push('login');
   };
 
   const handleDrop = async (status: Status) => {

@@ -1,10 +1,15 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { Manager } from '../managers/manager.entity';
 import { Tenant } from '../tenants/tenant.entity';
+import { MailService } from '../mail/mail.service';
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:3001';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +19,7 @@ export class AuthService {
     @InjectRepository(Tenant)
     private tenantsRepository: Repository<Tenant>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   // ---------- Managers ----------
@@ -73,5 +79,38 @@ export class AuthService {
       email: tenant.email,
       full_name: tenant.full_name,
     };
+  }
+
+  // ---------- Password reset (tenants only) ----------
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const tenant = await this.tenantsRepository.findOne({ where: { email } });
+
+    // Always resolve silently, even if no account exists — this prevents
+    // attackers from using this endpoint to discover which emails are registered.
+    if (!tenant) {
+      return;
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    tenant.reset_token = token;
+    tenant.reset_token_expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+    await this.tenantsRepository.save(tenant);
+
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
+    await this.mailService.sendPasswordResetEmail({ to: tenant.email, resetLink });
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const tenant = await this.tenantsRepository.findOne({ where: { reset_token: token } });
+
+    if (!tenant || !tenant.reset_token_expires || tenant.reset_token_expires.getTime() < Date.now()) {
+      throw new BadRequestException('This reset link is invalid or has expired');
+    }
+
+    tenant.password = await bcrypt.hash(newPassword, 10);
+    tenant.reset_token = null;
+    tenant.reset_token_expires = null;
+    await this.tenantsRepository.save(tenant);
   }
 }

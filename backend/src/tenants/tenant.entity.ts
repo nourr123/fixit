@@ -12,7 +12,13 @@ export class Tenant {
   email!: string;
 
   @Column()
-  password!: string; // stored as a bcrypt hash, never plain text
+  password!: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  reset_token!: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  reset_token_expires!: Date | null;
 
   @CreateDateColumn()
   created_at!: Date;

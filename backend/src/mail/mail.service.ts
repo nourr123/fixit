@@ -60,8 +60,40 @@ export class MailService {
       this.logger.log(`Email sent to ${to} for ticket #${ticketId} (messageId: ${info.messageId})`);
       return info;
     } catch (error) {
-      // Never let an email failure break the status update itself
       this.logger.error(`Failed to send status email to ${to} for ticket #${ticketId}`, error);
+      return null;
+    }
+  }
+
+  async sendPasswordResetEmail(params: { to: string; resetLink: string }) {
+    const { to, resetLink } = params;
+
+    try {
+      const info = await this.transporter.sendMail({
+        from: `FixIt <${this.fromAddress}>`,
+        to,
+        subject: 'Reset your FixIt password',
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #23282E;">Password reset requested</h2>
+            <p style="color: #2F4858; font-size: 14px; line-height: 1.6;">
+              We received a request to reset the password for your FixIt account.
+              This link expires in 1 hour.
+            </p>
+            <a href="${resetLink}" style="display: inline-block; background: #23282E; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-size: 14px; margin: 16px 0;">
+              Reset your password
+            </a>
+            <p style="color: #8A8478; font-size: 12px;">
+              If you didn't request this, you can safely ignore this email.
+            </p>
+          </div>
+        `,
+      });
+
+      this.logger.log(`Password reset email sent to ${to} (messageId: ${info.messageId})`);
+      return info;
+    } catch (error) {
+      this.logger.error(`Failed to send password reset email to ${to}`, error);
       return null;
     }
   }
