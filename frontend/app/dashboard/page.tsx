@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Priority = 'High' | 'Medium' | 'Low';
@@ -25,8 +25,7 @@ const PRIORITY_VAR: Record<Priority, string> = {
   Low: 'var(--priority-low, #4C8C4A)',
 };
 
-const STATUS_META: Record<Status, { color: string; icon: JSX.Element }> = {
-  Open: {
+const STATUS_META: Record<Status, { color: string; icon: ReactElement }> = {  Open: {
     color: 'var(--accent-blue, #2C4A7C)',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
