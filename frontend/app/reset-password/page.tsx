@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SiteNav from '../components/SiteNav';
 
-type Role = 'tenant' | 'manager';
 const API_URL = 'http://localhost:3000';
 
 function EyeIcon({ open }: { open: boolean }) {
@@ -30,7 +29,6 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
-  const role = (searchParams.get('role') as Role) || 'tenant';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -54,7 +52,7 @@ function ResetPasswordForm() {
       const res = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, role, password }),
+        body: JSON.stringify({ token, password }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -99,7 +97,7 @@ function ResetPasswordForm() {
       ) : (
         <>
           <p className="text-sm mb-6" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
-            Choose a new password for your {role === 'tenant' ? 'tenant' : 'manager'} account.
+            Choose a new password for your tenant account.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
