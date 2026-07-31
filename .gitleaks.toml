@@ -1,0 +1,8 @@
+title = "FixIt gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Faux positif du template NestJS par défaut (déjà nettoyé du README, resté dans l'historique Git ancien)"
+regexes = ['''abc123def456''']
