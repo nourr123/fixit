@@ -39,10 +39,11 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-medium rounded-sm transition"
             style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
           >
-            Report an issue
+            Report an issue{" "}
             <span aria-hidden>→</span>
           </Link>
-<div
+
+          <div
             className="mt-10 pt-6 flex gap-6"
             style={{ borderTop: '1px solid var(--line)' }}
           >

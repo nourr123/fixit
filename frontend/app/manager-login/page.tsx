@@ -56,10 +56,11 @@ export default function ManagerLoginPage() {
 
           <form onSubmit={handleSubmit} className="px-8 py-8 space-y-5">
             <div>
-              <label className="block text-[12px] uppercase tracking-wide mb-1.5" style={{ color: 'var(--slate)' }}>
+              <label htmlFor="email" className="block text-[12px] uppercase tracking-wide mb-1.5" style={{ color: 'var(--slate)' }}>
                 Email
               </label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -71,10 +72,11 @@ export default function ManagerLoginPage() {
             </div>
 
             <div>
-              <label className="block text-[12px] uppercase tracking-wide mb-1.5" style={{ color: 'var(--slate)' }}>
+              <label htmlFor="password" className="block text-[12px] uppercase tracking-wide mb-1.5" style={{ color: 'var(--slate)' }}>
                 Password
               </label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

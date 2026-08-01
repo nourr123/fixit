@@ -171,10 +171,11 @@ export default function SubmitTicketPage() {
 
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-3.5">
             <div>
-              <label className="block text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--slate)' }}>
+              <label htmlFor="tenantName" className="block text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--slate)' }}>
                 Tenant name
               </label>
               <input
+                id="tenantName"
                 type="text"
                 value={tenantName}
                 onChange={(e) => setTenantName(e.target.value)}
@@ -192,10 +193,11 @@ export default function SubmitTicketPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--slate)' }}>
+              <label htmlFor="unitNumber" className="block text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--slate)' }}>
                 Unit number
               </label>
               <input
+                id="unitNumber"
                 type="text"
                 value={unitNumber}
                 onChange={(e) => setUnitNumber(e.target.value)}
@@ -208,7 +210,7 @@ export default function SubmitTicketPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] uppercase tracking-wide" style={{ color: 'var(--slate)' }}>
+                <label htmlFor="description" className="block text-[11px] uppercase tracking-wide" style={{ color: 'var(--slate)' }}>
                   Describe the issue
                 </label>
                 <div className="flex items-center gap-1.5">
@@ -224,6 +226,7 @@ export default function SubmitTicketPage() {
                 </div>
               </div>
               <textarea
+                id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
@@ -258,10 +261,10 @@ export default function SubmitTicketPage() {
             )}
 
             {!isLoggedIn && (
-  <p className="text-[12px] text-center" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
-    Log in or create an account to track this ticket later.
-  </p>
-)}
+              <p className="text-[12px] text-center" style={{ color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}>
+                Log in or create an account to track this ticket later.
+              </p>
+            )}
           </form>
         </div>
       </div>

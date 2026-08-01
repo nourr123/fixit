@@ -38,8 +38,7 @@ function EmptyState() {
       style={{ border: '1px dashed var(--line)', color: 'var(--slate)', fontFamily: 'var(--font-inter)' }}
     >
       <p className="text-sm mb-3">You have not reported any issues yet.</p>
-      
-        <a href="/submit-ticket"
+      <a href="/submit-ticket"
         className="inline-block text-sm px-5 py-2.5 rounded-md"
         style={{ background: 'var(--slate)', color: '#F5F3EE' }}
       >
@@ -173,12 +172,11 @@ export default function MyTicketsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          
-            <a href="/submit-ticket"
+          <a href="/submit-ticket"
             className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-md transition hover:opacity-90"
             style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
           >
-            Report an issue
+            Report an issue{" "}
             <span aria-hidden>→</span>
           </a>
           <button
