@@ -97,7 +97,7 @@ export default function AboutPage() {
             className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-md transition hover:opacity-90"
             style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
           >
-            Report an issue
+            Report an issue{" "}
             <span aria-hidden>→</span>
           </a>
         </div>
