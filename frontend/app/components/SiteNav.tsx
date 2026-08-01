@@ -51,7 +51,7 @@ export default function SiteNav() {
                 className="text-base font-medium px-2 py-1.5 transition hover:opacity-70 relative group"
                 style={{ color: 'var(--ink)' }}
               >
-                My tickets
+                My tickets{" "}
                 <span
                   className="absolute left-2 right-2 -bottom-0.5 h-[2px] scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
                   style={{ background: 'var(--slate)' }}
@@ -72,7 +72,7 @@ export default function SiteNav() {
                 className="text-base font-medium px-2 py-1.5 transition hover:opacity-70 relative group"
                 style={{ color: 'var(--ink)' }}
               >
-                About us
+                About us{" "}
                 <span
                   className="absolute left-2 right-2 -bottom-0.5 h-[2px] scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
                   style={{ background: 'var(--slate)' }}
