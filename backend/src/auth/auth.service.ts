@@ -1,9 +1,14 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import { Manager } from '../managers/manager.entity';
 import { Tenant } from '../tenants/tenant.entity';
 import { MailService } from '../mail/mail.service';
@@ -15,11 +20,11 @@ const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:3001';
 export class AuthService {
   constructor(
     @InjectRepository(Manager)
-    private managersRepository: Repository<Manager>,
+    private readonly managersRepository: Repository<Manager>,
     @InjectRepository(Tenant)
-    private tenantsRepository: Repository<Tenant>,
-    private jwtService: JwtService,
-    private mailService: MailService,
+    private readonly tenantsRepository: Repository<Tenant>,
+    private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   // ---------- Managers ----------
@@ -37,7 +42,11 @@ export class AuthService {
   }
 
   loginManager(manager: Manager) {
-    const payload = { sub: manager.id, email: manager.email, role: 'manager' as const };
+    const payload = {
+      sub: manager.id,
+      email: manager.email,
+      role: 'manager' as const,
+    };
     return {
       access_token: this.jwtService.sign(payload),
       email: manager.email,
@@ -46,7 +55,11 @@ export class AuthService {
 
   // ---------- Tenants ----------
 
-  async registerTenant(fullName: string, email: string, password: string): Promise<Tenant> {
+  async registerTenant(
+    fullName: string,
+    email: string,
+    password: string,
+  ): Promise<Tenant> {
     const existing = await this.tenantsRepository.findOne({ where: { email } });
     if (existing) {
       throw new ConflictException('An account with this email already exists');
@@ -73,7 +86,11 @@ export class AuthService {
   }
 
   loginTenant(tenant: Tenant) {
-    const payload = { sub: tenant.id, email: tenant.email, role: 'tenant' as const };
+    const payload = {
+      sub: tenant.id,
+      email: tenant.email,
+      role: 'tenant' as const,
+    };
     return {
       access_token: this.jwtService.sign(payload),
       email: tenant.email,
@@ -98,14 +115,24 @@ export class AuthService {
     await this.tenantsRepository.save(tenant);
 
     const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
-    await this.mailService.sendPasswordResetEmail({ to: tenant.email, resetLink });
+    await this.mailService.sendPasswordResetEmail({
+      to: tenant.email,
+      resetLink,
+    });
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const tenant = await this.tenantsRepository.findOne({ where: { reset_token: token } });
+    const tenant = await this.tenantsRepository.findOne({
+      where: { reset_token: token },
+    });
 
-    if (!tenant || !tenant.reset_token_expires || tenant.reset_token_expires.getTime() < Date.now()) {
-      throw new BadRequestException('This reset link is invalid or has expired');
+    if (
+      !tenant?.reset_token_expires ||
+      tenant.reset_token_expires.getTime() < Date.now()
+    ) {
+      throw new BadRequestException(
+        'This reset link is invalid or has expired',
+      );
     }
 
     tenant.password = await bcrypt.hash(newPassword, 10);
