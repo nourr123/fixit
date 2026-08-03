@@ -60,8 +60,14 @@ export default function SubmitTicketPage() {
 
         if (currentRequestId !== requestIdRef.current) return;
 
-        const mapped: Signal =
-          data.priority === 'High' ? 'high' : data.priority === 'Low' ? 'low' : 'medium';
+        let mapped: Signal;
+        if (data.priority === 'High') {
+          mapped = 'high';
+        } else if (data.priority === 'Low') {
+          mapped = 'low';
+        } else {
+          mapped = 'medium';
+        }
         setSignal(mapped);
       } catch (err) {
         console.error(err);
@@ -77,13 +83,6 @@ export default function SubmitTicketPage() {
   }, [description]);
 
   const meta = SIGNAL_META[signal];
-
-  const handleLogout = () => {
-    localStorage.removeItem('fixit_tenant_token');
-    localStorage.removeItem('fixit_tenant_name');
-    localStorage.removeItem('fixit_tenant_email');
-    window.location.href = '/login';
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

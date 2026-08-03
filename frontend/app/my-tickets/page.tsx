@@ -48,7 +48,7 @@ function EmptyState() {
   );
 }
 
-function TicketCard({ ticket }: { ticket: Ticket }) {
+function TicketCard({ ticket }: Readonly<{ ticket: Ticket }>) {
   const statusMeta = STATUS_LABEL[ticket.status];
   const createdDate = new Date(ticket.created_at).toLocaleDateString();
 

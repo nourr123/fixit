@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const VISIBLE_ON = ['/', '/about', '/submit-ticket'];
+const VISIBLE_ON = new Set(['/', '/about', '/submit-ticket']);
 
 export default function SiteNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const showLinks = VISIBLE_ON.includes(pathname);
+  const showLinks = VISIBLE_ON.has(pathname);
 
   const [isTenantLoggedIn, setIsTenantLoggedIn] = useState(false);
 

@@ -75,6 +75,15 @@ export default function LoginPage() {
     ? `/forgot-password?email=${encodeURIComponent(email)}`
     : '/forgot-password';
 
+  let submitLabel: string;
+  if (status === 'loading') {
+    submitLabel = 'Signing in…';
+  } else if (role === 'tenant') {
+    submitLabel = 'Sign in as Tenant';
+  } else {
+    submitLabel = 'Sign in as Manager';
+  }
+
   return (
     <div className="h-screen flex flex-col lg:flex-row overflow-hidden" style={{ background: 'var(--paper, #F5F3EE)' }}>
       {/* Left — logo + form panel */}
@@ -192,7 +201,7 @@ export default function LoginPage() {
                 className="w-full py-3.5 text-base font-medium rounded-sm transition disabled:opacity-50"
                 style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
               >
-                {status === 'loading' ? 'Signing in…' : role === 'tenant' ? 'Sign in as Tenant' : 'Sign in as Manager'}
+                {submitLabel}
               </button>
 
               {status === 'error' && (

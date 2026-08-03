@@ -39,7 +39,9 @@ OUTPUT FORMAT:
 Respond with ONLY a JSON object, no other text, no explanation:
 {"priority": "High" | "Medium" | "Low", "needs_review": true | false}`;
 
-export async function classifyPriorityWithLLM(description: string): Promise<PriorityResult | null> {
+export async function classifyPriorityWithLLM(
+  description: string,
+): Promise<PriorityResult | null> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     console.warn('GROQ_API_KEY not set — skipping LLM classification');
