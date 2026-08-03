@@ -14,7 +14,9 @@ export class MailService {
 
     this.fromAddress = gmailUser ?? '';
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: gmailUser,
         pass: gmailAppPassword,
@@ -31,8 +33,14 @@ export class MailService {
   }) {
     const { to, tenantName, ticketId, description, newStatus } = params;
 
-    const statusColor =
-      newStatus === 'Resolved' ? '#4C7A5B' : newStatus === 'In Progress' ? '#C68A1F' : '#2C4A7C';
+    let statusColor: string;
+    if (newStatus === 'Resolved') {
+      statusColor = '#4C7A5B';
+    } else if (newStatus === 'In Progress') {
+      statusColor = '#C68A1F';
+    } else {
+      statusColor = '#2C4A7C';
+    }
 
     try {
       const info = await this.transporter.sendMail({
@@ -57,10 +65,15 @@ export class MailService {
         `,
       });
 
-      this.logger.log(`Email sent to ${to} for ticket #${ticketId} (messageId: ${info.messageId})`);
+      this.logger.log(
+        `Email sent to ${to} for ticket #${ticketId} (messageId: ${info.messageId})`,
+      );
       return info;
     } catch (error) {
-      this.logger.error(`Failed to send status email to ${to} for ticket #${ticketId}`, error);
+      this.logger.error(
+        `Failed to send status email to ${to} for ticket #${ticketId}`,
+        error,
+      );
       return null;
     }
   }
@@ -90,7 +103,9 @@ export class MailService {
         `,
       });
 
-      this.logger.log(`Password reset email sent to ${to} (messageId: ${info.messageId})`);
+      this.logger.log(
+        `Password reset email sent to ${to} (messageId: ${info.messageId})`,
+      );
       return info;
     } catch (error) {
       this.logger.error(`Failed to send password reset email to ${to}`, error);

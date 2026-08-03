@@ -11,10 +11,10 @@ import { MailService } from '../mail/mail.service';
 export class TicketsService {
   constructor(
     @InjectRepository(Ticket)
-    private ticketsRepository: Repository<Ticket>,
+    private readonly ticketsRepository: Repository<Ticket>,
     @InjectRepository(Tenant)
-    private tenantsRepository: Repository<Tenant>,
-    private mailService: MailService,
+    private readonly tenantsRepository: Repository<Tenant>,
+    private readonly mailService: MailService,
   ) {}
 
   findAll(): Promise<Ticket[]> {
@@ -33,7 +33,10 @@ export class TicketsService {
     return llmResult ?? classifyPriority(description);
   }
 
-  async create(data: Partial<Ticket>, tenantId: number | null): Promise<Ticket> {
+  async create(
+    data: Partial<Ticket>,
+    tenantId: number | null,
+  ): Promise<Ticket> {
     const result = await this.resolvePriority(data.description ?? '');
 
     // If the tenant is logged in, pull their email from their account
