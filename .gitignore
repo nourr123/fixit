@@ -2,6 +2,5 @@ node_modules/
 .env
 dist/
 .next/
-coverage/
 *.log
 .DS_Store
