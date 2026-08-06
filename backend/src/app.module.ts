@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TicketsModule } from './tickets/tickets.module';
 import { AuthModule } from './auth/auth.module';
+import { HealthModule } from './health/health.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { Manager } from './managers/manager.entity';
 
 @Module({
@@ -21,6 +23,8 @@ import { Manager } from './managers/manager.entity';
     TypeOrmModule.forFeature([Manager]),
     TicketsModule,
     AuthModule,
+    HealthModule,
+    MetricsModule,
   ],
 })
 export class AppModule {}
