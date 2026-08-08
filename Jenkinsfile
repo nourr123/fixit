@@ -12,6 +12,16 @@ pipeline {
             }
         }
 
+        stage('Secret Scanning') {
+            steps {
+                sh '''
+                    docker run --rm -v $(pwd):/repo -w /repo \
+                        zricethezav/gitleaks:latest detect \
+                        --source . --config .gitleaks.toml --verbose --no-git
+                '''
+            }
+        }
+
         stage('Install & Build Backend') {
             steps {
                 dir('backend') {
@@ -44,10 +54,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline réussi'
+            echo ' Pipeline réussi'
         }
         failure {
-            echo '❌ Pipeline échoué'
+            echo ' Pipeline échoué'
         }
     }
 }
