@@ -13,14 +13,14 @@ pipeline {
         }
 
         stage('Secret Scanning') {
-            steps {
-                sh '''
-                    docker run --rm -v $(pwd):/repo -w /repo \
-                        zricethezav/gitleaks:latest detect \
-                        --source . --config .gitleaks.toml --verbose --no-git
-                '''
-            }
-        }
+    steps {
+        sh '''
+            docker run --rm -v $(pwd):/repo -w /repo \
+                zricethezav/gitleaks:latest detect \
+                --source /repo --config /repo/.gitleaks.toml --verbose --no-git
+        '''
+    }
+}
 
         stage('Install & Build Backend') {
             steps {
