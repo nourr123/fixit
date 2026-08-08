@@ -13,14 +13,16 @@ pipeline {
         }
 
         stage('Secret Scanning') {
-    steps {
-        sh '''
-            docker run --rm -v $(pwd):/repo -w /repo \
-                zricethezav/gitleaks:latest detect \
-                --source /repo --config /repo/.gitleaks.toml --verbose --no-git
-        '''
-    }
-}
+            steps {
+                sh '''
+                    curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz -o gitleaks.tar.gz
+                    tar -xzf gitleaks.tar.gz gitleaks
+                    chmod +x gitleaks
+                    ./gitleaks detect --source . --config .gitleaks.toml --verbose --no-git
+                    rm -f gitleaks gitleaks.tar.gz
+                '''
+            }
+        }
 
         stage('Install & Build Backend') {
             steps {
