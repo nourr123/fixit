@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import SiteNav from '../components/SiteNav';
 
 type Signal = 'idle' | 'loading' | 'low' | 'medium' | 'high';
@@ -84,7 +84,7 @@ export default function SubmitTicketPage() {
 
   const meta = SIGNAL_META[signal];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setStatus('loading');
     try {
