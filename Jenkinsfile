@@ -57,9 +57,10 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
                     sh '''
+                        rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
                         which unzip || (apt-get update -qq && apt-get install -y -qq unzip)
                         curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                        unzip -q sonar-scanner.zip
+                        unzip -oq sonar-scanner.zip
                         ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner -Dsonar.projectKey=FixIt
                         rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
                     '''
@@ -78,10 +79,10 @@ pipeline {
 
     post {
         success {
-            echo ' Pipeline réussi'
+            echo '✅ Pipeline réussi'
         }
         failure {
-            echo ' Pipeline échoué'
+            echo '❌ Pipeline échoué'
         }
     }
 }
