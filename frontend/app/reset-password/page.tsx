@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SiteNav from '../components/SiteNav';
@@ -36,7 +36,7 @@ function ResetPasswordForm() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {

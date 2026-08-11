@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SiteNav from '../components/SiteNav';
 
@@ -10,7 +10,7 @@ export default function ManagerLoginPage() {
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('loading');
     try {
