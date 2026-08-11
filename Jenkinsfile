@@ -75,6 +75,33 @@ pipeline {
                 }
             }
         }
+
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                    docker build -t fixit-backend:${BUILD_NUMBER} ./backend
+                    docker build -t fixit-frontend:${BUILD_NUMBER} ./frontend
+                '''
+            }
+        }
+
+        stage('Container Vulnerability Scanning') {
+            steps {
+                sh '''
+                    curl -sSfL https://github.com/aquasecurity/trivy/releases/download/v0.56.2/trivy_0.56.2_Linux-64bit.tar.gz -o trivy.tar.gz
+                    tar -xzf trivy.tar.gz trivy
+                    chmod +x trivy
+
+                    echo "=== Scanning backend image ==="
+                    ./trivy image --severity HIGH,CRITICAL --exit-code 1 fixit-backend:${BUILD_NUMBER}
+
+                    echo "=== Scanning frontend image ==="
+                    ./trivy image --severity HIGH,CRITICAL --exit-code 1 fixit-frontend:${BUILD_NUMBER}
+
+                    rm -f trivy trivy.tar.gz
+                '''
+            }
+        }
     }
 
     post {
