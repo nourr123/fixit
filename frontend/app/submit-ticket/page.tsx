@@ -84,7 +84,7 @@ export default function SubmitTicketPage() {
 
   const meta = SIGNAL_META[signal];
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('loading');
     try {
