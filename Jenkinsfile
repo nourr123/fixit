@@ -90,11 +90,14 @@ pipeline {
                 sh '''
                     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
 
+                    echo "=== Downloading vulnerability database ==="
+                    ./bin/trivy image --download-db-only --timeout 10m
+
                     echo "=== Scanning backend image ==="
-                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 fixit-backend:${BUILD_NUMBER}
+                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m fixit-backend:${BUILD_NUMBER}
 
                     echo "=== Scanning frontend image ==="
-                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 fixit-frontend:${BUILD_NUMBER}
+                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m fixit-frontend:${BUILD_NUMBER}
 
                     rm -rf ./bin
                 '''
