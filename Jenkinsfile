@@ -106,11 +106,20 @@ pipeline {
     }
 
     post {
+        always {
+            sh '''
+                echo "=== Cleaning up disk space ==="
+                docker image rm fixit-backend:${BUILD_NUMBER} fixit-frontend:${BUILD_NUMBER} || true
+                docker system prune -f || true
+                docker builder prune -f || true
+                rm -rf ~/.cache/trivy || true
+            '''
+        }
         success {
-            echo '✅ Pipeline réussi'
+            echo 'Pipeline réussi'
         }
         failure {
-            echo '❌ Pipeline échoué'
+            echo 'Pipeline échoué'
         }
     }
 }
