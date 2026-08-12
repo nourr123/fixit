@@ -90,14 +90,14 @@ pipeline {
                 sh '''
                     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
 
-                    echo "=== Downloading vulnerability database ==="
-                    ./bin/trivy image --download-db-only --timeout 10m --db-repository ghcr.io/aquasecurity/trivy-db
+                    echo "=== Downloading vulnerability database (cached if already present) ==="
+                    ./bin/trivy image --download-db-only --timeout 15m
 
                     echo "=== Scanning backend image ==="
-                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m --db-repository ghcr.io/aquasecurity/trivy-db fixit-backend:${BUILD_NUMBER}
+                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m fixit-backend:${BUILD_NUMBER}
 
                     echo "=== Scanning frontend image ==="
-                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m --db-repository ghcr.io/aquasecurity/trivy-db fixit-frontend:${BUILD_NUMBER}
+                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m fixit-frontend:${BUILD_NUMBER}
 
                     rm -rf ./bin
                 '''
@@ -112,14 +112,13 @@ pipeline {
                 docker image rm fixit-backend:${BUILD_NUMBER} fixit-frontend:${BUILD_NUMBER} || true
                 docker system prune -f || true
                 docker builder prune -f || true
-                rm -rf ~/.cache/trivy || true
             '''
         }
         success {
-            echo 'Pipeline réussi'
+            echo '✅ Pipeline réussi'
         }
         failure {
-            echo 'Pipeline échoué'
+            echo '❌ Pipeline échoué'
         }
     }
 }
