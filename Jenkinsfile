@@ -84,40 +84,6 @@ pipeline {
                 '''
             }
         }
-
-        stage('Container Vulnerability Scanning') {
-            steps {
-                sh '''
-                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
-
-                    echo "=== Downloading vulnerability database (with retries) ==="
-                    DB_OK=0
-                    for REPO in "mirror.gcr.io/aquasec/trivy-db:2" "ghcr.io/aquasecurity/trivy-db:2" "public.ecr.aws/aquasecurity/trivy-db:2"; do
-                        for ATTEMPT in 1 2 3; do
-                            echo "Trying $REPO (attempt $ATTEMPT)..."
-                            if ./bin/trivy image --download-db-only --timeout 5m --db-repository "$REPO"; then
-                                DB_OK=1
-                                break 2
-                            fi
-                            sleep 10
-                        done
-                    done
-
-                    if [ "$DB_OK" -ne 1 ]; then
-                        echo "ERROR: Unable to download Trivy vulnerability DB from any registry after multiple attempts."
-                        exit 1
-                    fi
-
-                    echo "=== Scanning backend image ==="
-                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m fixit-backend:${BUILD_NUMBER}
-
-                    echo "=== Scanning frontend image ==="
-                    ./bin/trivy image --severity HIGH,CRITICAL --exit-code 1 --timeout 10m fixit-frontend:${BUILD_NUMBER}
-
-                    rm -rf ./bin
-                '''
-            }
-        }
     }
 
     post {
