@@ -84,20 +84,67 @@ pipeline {
                 '''
             }
         }
+
+        stage('Container Vulnerability Scanning') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "=== Installing Trivy ==="
+
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
+                        sh -s -- -b ./trivy-bin
+
+                    echo "=== Trivy version ==="
+                    ./trivy-bin/trivy --version
+
+                    echo "=== Scanning backend image ==="
+
+                    ./trivy-bin/trivy image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 1 \
+                        --ignore-unfixed \
+                        --timeout 10m \
+                        fixit-backend:${BUILD_NUMBER}
+
+                    echo "=== Backend image passed security scan ==="
+
+                    echo "=== Scanning frontend image ==="
+
+                    ./trivy-bin/trivy image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 1 \
+                        --ignore-unfixed \
+                        --timeout 10m \
+                        fixit-frontend:${BUILD_NUMBER}
+
+                    echo "=== Frontend image passed security scan ==="
+
+                    echo "=== Trivy scan completed successfully ==="
+                '''
+            }
+        }
     }
 
     post {
         always {
             sh '''
                 echo "=== Cleaning up disk space ==="
-                docker image rm fixit-backend:${BUILD_NUMBER} fixit-frontend:${BUILD_NUMBER} || true
+
+                docker image rm fixit-backend:${BUILD_NUMBER} \
+                               fixit-frontend:${BUILD_NUMBER} || true
+
+                rm -rf ./trivy-bin
+
                 docker system prune -f || true
                 docker builder prune -f || true
             '''
         }
+
         success {
             echo ' Pipeline réussi'
         }
+
         failure {
             echo ' Pipeline échoué'
         }
