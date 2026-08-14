@@ -96,10 +96,10 @@ pipeline {
             '''
         }
         success {
-            echo '✅ Pipeline réussi'
+            echo ' Pipeline réussi'
         }
         failure {
-            echo '❌ Pipeline échoué'
+            echo ' Pipeline échoué'
         }
     }
 }
