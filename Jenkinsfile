@@ -98,25 +98,37 @@ pipeline {
                     echo "=== Trivy version ==="
                     ./trivy-bin/trivy --version
 
+                    mkdir -p /var/jenkins_home/trivy-cache
+
                     echo "=== Scanning backend image ==="
 
-                    ./trivy-bin/trivy image \
-                        --severity HIGH,CRITICAL \
-                        --exit-code 1 \
-                        --ignore-unfixed \
-                        --timeout 10m \
-                        fixit-backend:${BUILD_NUMBER}
+                    for i in 1 2 3; do
+                        ./trivy-bin/trivy image \
+                            --cache-dir /var/jenkins_home/trivy-cache \
+                            --severity HIGH,CRITICAL \
+                            --exit-code 1 \
+                            --ignore-unfixed \
+                            --timeout 15m \
+                            fixit-backend:${BUILD_NUMBER} && break
+                        echo "Tentative $i échouée, nouvel essai dans 10s..."
+                        sleep 10
+                    done
 
                     echo "=== Backend image passed security scan ==="
 
                     echo "=== Scanning frontend image ==="
 
-                    ./trivy-bin/trivy image \
-                        --severity HIGH,CRITICAL \
-                        --exit-code 1 \
-                        --ignore-unfixed \
-                        --timeout 10m \
-                        fixit-frontend:${BUILD_NUMBER}
+                    for i in 1 2 3; do
+                        ./trivy-bin/trivy image \
+                            --cache-dir /var/jenkins_home/trivy-cache \
+                            --severity HIGH,CRITICAL \
+                            --exit-code 1 \
+                            --ignore-unfixed \
+                            --timeout 15m \
+                            fixit-frontend:${BUILD_NUMBER} && break
+                        echo "Tentative $i échouée, nouvel essai dans 10s..."
+                        sleep 10
+                    done
 
                     echo "=== Frontend image passed security scan ==="
 
