@@ -98,39 +98,45 @@ pipeline {
                     echo "=== Trivy version ==="
                     ./trivy-bin/trivy --version
 
+                    # Cache persistant hors workspace : la DB des vulnerabilites
+                    # est reutilisee entre les builds, evite un re-telechargement
+                    # a chaque run (source du probleme reseau initial).
                     mkdir -p /var/jenkins_home/trivy-cache
 
-                    echo "=== Scanning backend image ==="
+                    scan_image() {
+                        image="$1"
+                        attempt=1
+                        max_attempts=3
 
-                    for i in 1 2 3; do
-                        ./trivy-bin/trivy image \
-                            --cache-dir /var/jenkins_home/trivy-cache \
-                            --severity HIGH,CRITICAL \
-                            --exit-code 1 \
-                            --ignore-unfixed \
-                            --timeout 15m \
-                            fixit-backend:${BUILD_NUMBER} && break
-                        echo "Tentative $i échouée, nouvel essai dans 10s..."
-                        sleep 10
-                    done
+                        while [ "$attempt" -le "$max_attempts" ]; do
+                            echo "=== Scanning $image (tentative $attempt/$max_attempts) ==="
 
-                    echo "=== Backend image passed security scan ==="
+                            if ./trivy-bin/trivy image \
+                                --cache-dir /var/jenkins_home/trivy-cache \
+                                --severity HIGH,CRITICAL \
+                                --exit-code 1 \
+                                --ignore-unfixed \
+                                --timeout 15m \
+                                "$image"; then
+                                echo "=== $image : scan reussi ==="
+                                return 0
+                            fi
 
-                    echo "=== Scanning frontend image ==="
+                            echo "Tentative $attempt echouee pour $image"
+                            attempt=$((attempt + 1))
+                            [ "$attempt" -le "$max_attempts" ] && sleep 10
+                        done
 
-                    for i in 1 2 3; do
-                        ./trivy-bin/trivy image \
-                            --cache-dir /var/jenkins_home/trivy-cache \
-                            --severity HIGH,CRITICAL \
-                            --exit-code 1 \
-                            --ignore-unfixed \
-                            --timeout 15m \
-                            fixit-frontend:${BUILD_NUMBER} && break
-                        echo "Tentative $i échouée, nouvel essai dans 10s..."
-                        sleep 10
-                    done
+                        echo "ECHEC: toutes les tentatives de scan ont echoue pour $image"
+                        return 1
+                    }
 
-                    echo "=== Frontend image passed security scan ==="
+                    # Si l'une des deux images echoue apres 3 tentatives,
+                    # scan_image retourne 1 et, grace a "set -e", tout le
+                    # stage echoue correctement (au lieu d'etre marque
+                    # "reussi" a tort).
+                    scan_image fixit-backend:${BUILD_NUMBER}
+                    scan_image fixit-frontend:${BUILD_NUMBER}
 
                     echo "=== Trivy scan completed successfully ==="
                 '''
