@@ -1,0 +1,4 @@
+# CVE-2026-69192 - ip-address package, vulnérabilité interne à npm (pas notre code)
+# SSRF via parsing IP incohérent - risque limité, en attente de patch npm officiel
+# Revu le 20/08/2026 par Nour
+CVE-2026-69192
