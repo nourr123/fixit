@@ -113,6 +113,7 @@ pipeline {
 
                             if ./trivy-bin/trivy image \
                                 --cache-dir /var/jenkins_home/trivy-cache \
+                                --skip-db-update \
                                 --severity HIGH,CRITICAL \
                                 --exit-code 1 \
                                 --ignore-unfixed \
