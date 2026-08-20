@@ -3,6 +3,9 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+RUN npm install -g npm@11
+
 COPY package*.json ./
 RUN npm ci
 
@@ -15,6 +18,9 @@ FROM node:20-slim AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+RUN npm install -g npm@11
 
 COPY package*.json ./
 RUN npm ci --omit=dev
