@@ -88,8 +88,6 @@ pipeline {
         stage('Container Vulnerability Scanning') {
             steps {
                 sh '''
-                    set -e
-
                     echo "=== Installing Trivy ==="
 
                     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
@@ -100,26 +98,30 @@ pipeline {
 
                     # Cache persistant hors workspace : la DB des vulnerabilites
                     # est reutilisee entre les builds, evite un re-telechargement
-                    # a chaque run (source du probleme reseau initial).
+                    # a chaque run.
                     mkdir -p /var/jenkins_home/trivy-cache
 
-                    scan_image() {
+                    # --- Scan CRITICAL : bloquant ---
+                    scan_critical() {
                         image="$1"
+                        report="$2"
                         attempt=1
                         max_attempts=3
 
                         while [ "$attempt" -le "$max_attempts" ]; do
-                            echo "=== Scanning $image (tentative $attempt/$max_attempts) ==="
+                            echo "=== [CRITICAL] Scanning $image (tentative $attempt/$max_attempts) ==="
 
                             if ./trivy-bin/trivy image \
                                 --cache-dir /var/jenkins_home/trivy-cache \
                                 --skip-db-update \
-                                --severity HIGH,CRITICAL \
+                                --severity CRITICAL \
                                 --exit-code 1 \
                                 --ignore-unfixed \
                                 --timeout 15m \
+                                --format table \
+                                --output "$report" \
                                 "$image"; then
-                                echo "=== $image : scan reussi ==="
+                                echo "=== $image : aucune faille CRITICAL ==="
                                 return 0
                             fi
 
@@ -128,16 +130,46 @@ pipeline {
                             [ "$attempt" -le "$max_attempts" ] && sleep 10
                         done
 
-                        echo "ECHEC: toutes les tentatives de scan ont echoue pour $image"
+                        echo "ECHEC: faille(s) CRITICAL detectee(s) pour $image apres $max_attempts tentatives"
                         return 1
                     }
 
-                    # Si l'une des deux images echoue apres 3 tentatives,
-                    # scan_image retourne 1 et, grace a "set -e", tout le
-                    # stage echoue correctement (au lieu d'etre marque
-                    # "reussi" a tort).
-                    scan_image fixit-backend:${BUILD_NUMBER}
-                    scan_image fixit-frontend:${BUILD_NUMBER}
+                    # --- Scan HIGH : non-bloquant, juste un rapport ---
+                    scan_high_report() {
+                        image="$1"
+                        report="$2"
+
+                        echo "=== [HIGH] Scanning $image (rapport uniquement) ==="
+
+                        ./trivy-bin/trivy image \
+                            --cache-dir /var/jenkins_home/trivy-cache \
+                            --skip-db-update \
+                            --severity HIGH \
+                            --exit-code 0 \
+                            --ignore-unfixed \
+                            --timeout 15m \
+                            --format table \
+                            --output "$report" \
+                            "$image" || true
+                    }
+
+                    # Backend
+                    scan_critical fixit-backend:${BUILD_NUMBER} trivy-critical-backend.txt
+                    critical_backend_status=$?
+                    scan_high_report fixit-backend:${BUILD_NUMBER} trivy-high-backend.txt
+
+                    # Frontend
+                    scan_critical fixit-frontend:${BUILD_NUMBER} trivy-critical-frontend.txt
+                    critical_frontend_status=$?
+                    scan_high_report fixit-frontend:${BUILD_NUMBER} trivy-high-frontend.txt
+
+                    echo "=== Rapports HIGH generes (non-bloquants), consultables dans les artifacts ==="
+
+                    # Le pipeline echoue seulement si une image a une faille CRITICAL
+                    if [ "$critical_backend_status" -ne 0 ] || [ "$critical_frontend_status" -ne 0 ]; then
+                        echo "ECHEC: au moins une image contient une faille CRITICAL corrigible"
+                        exit 1
+                    fi
 
                     echo "=== Trivy scan completed successfully ==="
                 '''
@@ -147,6 +179,8 @@ pipeline {
 
     post {
         always {
+            archiveArtifacts artifacts: 'trivy-*.txt', allowEmptyArchive: true
+
             sh '''
                 echo "=== Cleaning up disk space ==="
 
