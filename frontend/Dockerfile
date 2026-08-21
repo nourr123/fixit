@@ -3,6 +3,9 @@ FROM node:20-slim AS deps
 
 WORKDIR /app
 
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+    && npm install -g npm@11
+
 COPY package*.json ./
 RUN npm ci
 
@@ -10,6 +13,9 @@ RUN npm ci
 FROM node:20-slim AS builder
 
 WORKDIR /app
+
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+    && npm install -g npm@11
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -25,6 +31,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
+    && npm install -g npm@11
 
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
