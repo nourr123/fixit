@@ -33,8 +33,24 @@ services:
     networks:
       - fixit-net
 
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: fixit_grafana
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=changeme
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - fixit-net
+
 volumes:
   prometheus_data:
+  grafana_data:
 
 networks:
   fixit-net:
