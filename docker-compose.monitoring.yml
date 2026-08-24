@@ -14,6 +14,8 @@ services:
     devices:
       - /dev/kmsg
     privileged: true
+    networks:
+      - fixit-net
 
   prometheus:
     image: prom/prometheus:v3.0.1
@@ -28,6 +30,12 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
     depends_on:
       - cadvisor
+    networks:
+      - fixit-net
 
 volumes:
   prometheus_data:
+
+networks:
+  fixit-net:
+    external: true

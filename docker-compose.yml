@@ -16,6 +16,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - fixit-net
 
   backend:
     build:
@@ -33,6 +35,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - fixit-net
 
   frontend:
     build:
@@ -48,6 +52,12 @@ services:
       - "3001:3001"
     depends_on:
       - backend
+    networks:
+      - fixit-net
 
 volumes:
   pgdata:
+
+networks:
+  fixit-net:
+    external: true
