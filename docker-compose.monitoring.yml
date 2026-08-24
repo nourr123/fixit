@@ -14,3 +14,20 @@ services:
     devices:
       - /dev/kmsg
     privileged: true
+
+  prometheus:
+    image: prom/prometheus:v3.0.1
+    container_name: fixit_prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    depends_on:
+      - cadvisor
+
+volumes:
+  prometheus_data:
