@@ -6,6 +6,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -18,7 +19,13 @@ pipeline {
                     curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz -o gitleaks.tar.gz
                     tar -xzf gitleaks.tar.gz gitleaks
                     chmod +x gitleaks
-                    ./gitleaks detect --source . --config .gitleaks.toml --verbose --no-git
+
+                    ./gitleaks detect \
+                        --source . \
+                        --config .gitleaks.toml \
+                        --verbose \
+                        --no-git
+
                     rm -f gitleaks gitleaks.tar.gz
                 '''
             }
@@ -47,6 +54,7 @@ pipeline {
                 dir('backend') {
                     sh 'npm audit --audit-level=high || true'
                 }
+
                 dir('frontend') {
                     sh 'npm audit --audit-level=high || true'
                 }
@@ -58,10 +66,20 @@ pipeline {
                 withSonarQubeEnv('SonarQubeServer') {
                     sh '''
                         rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
-                        which unzip || (apt-get update -qq && apt-get install -y -qq unzip)
-                        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+
+                        which unzip || (
+                            apt-get update -qq &&
+                            apt-get install -y -qq unzip
+                        )
+
+                        curl -sSLo sonar-scanner.zip \
+                            https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+
                         unzip -oq sonar-scanner.zip
-                        ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner -Dsonar.projectKey=FixIt
+
+                        ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+                            -Dsonar.projectKey=FixIt
+
                         rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
                     '''
                 }
@@ -79,8 +97,15 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    docker build -t fixit-backend:${BUILD_NUMBER} ./backend
-                    docker build -t fixit-frontend:${BUILD_NUMBER} ./frontend
+                    echo "=== Building Docker images ==="
+
+                    docker build \
+                        -t fixit-backend:${BUILD_NUMBER} \
+                        ./backend
+
+                    docker build \
+                        -t fixit-frontend:${BUILD_NUMBER} \
+                        ./frontend
                 '''
             }
         }
@@ -96,12 +121,12 @@ pipeline {
                     echo "=== Trivy version ==="
                     ./trivy-bin/trivy --version
 
-                    # Cache persistant hors workspace : la DB des vulnerabilites
-                    # est reutilisee entre les builds, evite un re-telechargement
-                    # a chaque run.
                     mkdir -p /var/jenkins_home/trivy-cache
 
-                    # --- Scan CRITICAL : bloquant ---
+                    # ==========================================
+                    # CRITICAL - BLOCKING
+                    # ==========================================
+
                     scan_critical() {
                         image="$1"
                         report="$2"
@@ -109,7 +134,8 @@ pipeline {
                         max_attempts=3
 
                         while [ "$attempt" -le "$max_attempts" ]; do
-                            echo "=== [CRITICAL] Scanning $image (tentative $attempt/$max_attempts) ==="
+
+                            echo "=== [CRITICAL] Scanning $image (attempt $attempt/$max_attempts) ==="
 
                             if ./trivy-bin/trivy image \
                                 --cache-dir /var/jenkins_home/trivy-cache \
@@ -121,25 +147,31 @@ pipeline {
                                 --format table \
                                 --output "$report" \
                                 "$image"; then
-                                echo "=== $image : aucune faille CRITICAL ==="
+
+                                echo "=== $image : no CRITICAL vulnerabilities ==="
                                 return 0
                             fi
 
-                            echo "Tentative $attempt echouee pour $image"
+                            echo "Attempt $attempt failed"
+
                             attempt=$((attempt + 1))
+
                             [ "$attempt" -le "$max_attempts" ] && sleep 10
                         done
 
-                        echo "ECHEC: faille(s) CRITICAL detectee(s) pour $image apres $max_attempts tentatives"
+                        echo "ERROR: CRITICAL vulnerabilities detected in $image"
                         return 1
                     }
 
-                    # --- Scan HIGH : non-bloquant, juste un rapport ---
+                    # ==========================================
+                    # HIGH - NON BLOCKING
+                    # ==========================================
+
                     scan_high_report() {
                         image="$1"
                         report="$2"
 
-                        echo "=== [HIGH] Scanning $image (rapport uniquement) ==="
+                        echo "=== [HIGH] Scanning $image (report only) ==="
 
                         ./trivy-bin/trivy image \
                             --cache-dir /var/jenkins_home/trivy-cache \
@@ -153,21 +185,44 @@ pipeline {
                             "$image" || true
                     }
 
-                    # Backend
-                    scan_critical fixit-backend:${BUILD_NUMBER} trivy-critical-backend.txt
+                    # ==========================================
+                    # BACKEND
+                    # ==========================================
+
+                    scan_critical \
+                        fixit-backend:${BUILD_NUMBER} \
+                        trivy-critical-backend.txt
+
                     critical_backend_status=$?
-                    scan_high_report fixit-backend:${BUILD_NUMBER} trivy-high-backend.txt
 
-                    # Frontend
-                    scan_critical fixit-frontend:${BUILD_NUMBER} trivy-critical-frontend.txt
+                    scan_high_report \
+                        fixit-backend:${BUILD_NUMBER} \
+                        trivy-high-backend.txt
+
+                    # ==========================================
+                    # FRONTEND
+                    # ==========================================
+
+                    scan_critical \
+                        fixit-frontend:${BUILD_NUMBER} \
+                        trivy-critical-frontend.txt
+
                     critical_frontend_status=$?
-                    scan_high_report fixit-frontend:${BUILD_NUMBER} trivy-high-frontend.txt
 
-                    echo "=== Rapports HIGH generes (non-bloquants), consultables dans les artifacts ==="
+                    scan_high_report \
+                        fixit-frontend:${BUILD_NUMBER} \
+                        trivy-high-frontend.txt
 
-                    # Le pipeline echoue seulement si une image a une faille CRITICAL
-                    if [ "$critical_backend_status" -ne 0 ] || [ "$critical_frontend_status" -ne 0 ]; then
-                        echo "ECHEC: au moins une image contient une faille CRITICAL corrigible"
+                    echo "=== HIGH vulnerability reports generated ==="
+
+                    # ==========================================
+                    # QUALITY GATE
+                    # ==========================================
+
+                    if [ "$critical_backend_status" -ne 0 ] || \
+                       [ "$critical_frontend_status" -ne 0 ]; then
+
+                        echo "ERROR: At least one image contains CRITICAL vulnerabilities"
                         exit 1
                     fi
 
@@ -175,31 +230,154 @@ pipeline {
                 '''
             }
         }
+
+        // =====================================================
+        // CD - PUSH IMAGES TO DOCKER HUB
+        // =====================================================
+
+        stage('Push to Registry') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+
+                    sh '''
+                        echo "=== Logging in to Docker Hub ==="
+
+                        echo "$DOCKER_PASS" | docker login \
+                            -u "$DOCKER_USER" \
+                            --password-stdin
+
+                        echo "=== Tagging Docker images ==="
+
+                        # Backend
+                        docker tag \
+                            fixit-backend:${BUILD_NUMBER} \
+                            $DOCKER_USER/fixit-backend:${BUILD_NUMBER}
+
+                        docker tag \
+                            fixit-backend:${BUILD_NUMBER} \
+                            $DOCKER_USER/fixit-backend:latest
+
+                        # Frontend
+                        docker tag \
+                            fixit-frontend:${BUILD_NUMBER} \
+                            $DOCKER_USER/fixit-frontend:${BUILD_NUMBER}
+
+                        docker tag \
+                            fixit-frontend:${BUILD_NUMBER} \
+                            $DOCKER_USER/fixit-frontend:latest
+
+                        echo "=== Pushing backend ==="
+
+                        docker push \
+                            $DOCKER_USER/fixit-backend:${BUILD_NUMBER}
+
+                        docker push \
+                            $DOCKER_USER/fixit-backend:latest
+
+                        echo "=== Pushing frontend ==="
+
+                        docker push \
+                            $DOCKER_USER/fixit-frontend:${BUILD_NUMBER}
+
+                        docker push \
+                            $DOCKER_USER/fixit-frontend:latest
+
+                        echo "=== Docker images pushed successfully ==="
+
+                        docker logout
+                    '''
+                }
+            }
+        }
+
+        // =====================================================
+        // CD - DEPLOY
+        // =====================================================
+
+        stage('Deploy') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+
+                    sh '''
+                        echo "=== Starting deployment ==="
+
+                        export DOCKERHUB_USER=$DOCKER_USER
+
+                        echo "=== Pulling latest backend and frontend images ==="
+
+                        echo "$DOCKER_PASS" | docker login \
+                            -u "$DOCKER_USER" \
+                            --password-stdin
+
+                        docker compose \
+                            -f docker-compose.yml \
+                            pull backend frontend
+
+                        echo "=== Restarting backend and frontend ==="
+
+                        docker compose \
+                            -f docker-compose.yml \
+                            up -d backend frontend
+
+                        docker logout
+
+                        echo "=== Deployment completed successfully ==="
+
+                        echo "=== Running containers ==="
+
+                        docker compose \
+                            -f docker-compose.yml \
+                            ps
+                    '''
+                }
+            }
+        }
     }
 
     post {
+
         always {
-            archiveArtifacts artifacts: 'trivy-*.txt', allowEmptyArchive: true
+
+            archiveArtifacts \
+                artifacts: 'trivy-*.txt', \
+                allowEmptyArchive: true
 
             sh '''
                 echo "=== Cleaning up disk space ==="
 
-                docker image rm fixit-backend:${BUILD_NUMBER} \
-                               fixit-frontend:${BUILD_NUMBER} || true
+                # Remove only build-number images.
+                # Do NOT remove Docker Hub latest images.
+
+                docker image rm \
+                    fixit-backend:${BUILD_NUMBER} \
+                    fixit-frontend:${BUILD_NUMBER} || true
 
                 rm -rf ./trivy-bin
 
                 docker system prune -f || true
+
                 docker builder prune -f || true
             '''
         }
 
         success {
-            echo ' Pipeline réussi'
+            echo 'Pipeline réussi - CI/CD completed successfully'
         }
 
         failure {
-            echo ' Pipeline échoué'
+            echo 'Pipeline échoué'
         }
     }
 }
