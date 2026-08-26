@@ -68,7 +68,7 @@ pipeline {
                         export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
                         export PATH=$JAVA_HOME/bin:$PATH
 
-                        rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
+                        rm -rf sonar-scanner.zip sonar-scanner-*-linux-x64
 
                         which unzip || (
                             apt-get update -qq &&
@@ -76,14 +76,17 @@ pipeline {
                         )
 
                         curl -sSLo sonar-scanner.zip \
-                            https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                            https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.0.2.4839-linux-x64.zip
 
                         unzip -oq sonar-scanner.zip
 
-                        ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+                        echo "=== Java utilisé ==="
+                        java -version
+
+                        ./sonar-scanner-7.0.2.4839-linux-x64/bin/sonar-scanner \
                             -Dsonar.projectKey=FixIt
 
-                        rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
+                        rm -rf sonar-scanner.zip sonar-scanner-7.0.2.4839-linux-x64
                     '''
                 }
             }
