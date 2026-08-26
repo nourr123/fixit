@@ -20,9 +20,7 @@ services:
       - fixit-net
 
   backend:
-    build:
-      context: ./backend
-      target: production
+    image: ${DOCKERHUB_USER}/fixit-backend:latest
     container_name: fixit_backend
     restart: always
     env_file:
@@ -39,9 +37,7 @@ services:
       - fixit-net
 
   frontend:
-    build:
-      context: ./frontend
-      target: production
+    image: ${DOCKERHUB_USER}/fixit-frontend:latest
     container_name: fixit_frontend
     restart: always
     environment:
