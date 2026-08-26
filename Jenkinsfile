@@ -65,6 +65,9 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQubeServer') {
                     sh '''
+                        export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+                        export PATH=$JAVA_HOME/bin:$PATH
+
                         rm -rf sonar-scanner.zip sonar-scanner-5.0.1.3006-linux
 
                         which unzip || (
