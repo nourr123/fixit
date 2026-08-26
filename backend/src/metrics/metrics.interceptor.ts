@@ -21,8 +21,14 @@ export class MetricsInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
-    const start = process.hrtime();
     const route = req.route?.path || req.url;
+
+    // Ne pas compter les appels au endpoint /metrics lui-meme
+    if (route === '/metrics') {
+      return next.handle();
+    }
+
+    const start = process.hrtime();
 
     return next.handle().pipe(
       tap(() => {
