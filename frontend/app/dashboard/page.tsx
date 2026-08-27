@@ -175,6 +175,7 @@ export default function DashboardPage() {
         </div>
 
         <button
+          type="button"
           onClick={handleLogout}
           className="text-sm px-5 py-2.5 rounded-md transition-colors"
           style={{ background: 'var(--ink)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}
@@ -283,6 +284,7 @@ export default function DashboardPage() {
                           />
 
                           <button
+                            type="button"
                             onClick={() => handleDelete(ticket.id)}
                             aria-label="Delete ticket"
                             className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"

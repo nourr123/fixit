@@ -180,6 +180,7 @@ export default function MyTicketsPage() {
             <span aria-hidden>→</span>
           </a>
           <button
+            type="button"
             onClick={handleLogout}
             className="text-sm px-5 py-2.5 rounded-md transition-colors hover:opacity-90"
             style={{ background: 'var(--slate)', color: '#F5F3EE', fontFamily: 'var(--font-inter)' }}

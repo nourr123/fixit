@@ -58,6 +58,7 @@ export default function SiteNav() {
                 />
               </Link>
               <button
+                type="button"
                 onClick={handleTenantLogout}
                 className="text-base font-medium px-5 py-2.5 rounded-sm shadow-sm transition hover:opacity-90 hover:shadow-md"
                 style={{ background: 'var(--slate)', color: '#F5F3EE' }}
