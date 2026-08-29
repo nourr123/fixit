@@ -105,11 +105,11 @@ pipeline {
                 sh '''
                     echo "=== Building Docker images ==="
 
-                    docker build \
+                    docker build --no-cache \
                         -t fixit-backend:${BUILD_NUMBER} \
                         ./backend
 
-                    docker build \
+                    docker build --no-cache \
                         -t fixit-frontend:${BUILD_NUMBER} \
                         ./frontend
                 '''
