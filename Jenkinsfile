@@ -325,11 +325,13 @@ pipeline {
 
                         export DOCKERHUB_USER=$DOCKER_USER
 
-                        echo "=== Pulling latest backend and frontend images ==="
-
                         echo "$DOCKER_PASS" | docker login \
-                            -u "$DOCKER_USER" \
-                            --password-stdin
+                         -u "$DOCKER_USER" \
+                         --password-stdin
+
+                        cd /home/ubuntu/fixit
+
+                        echo "=== Pulling latest backend and frontend images ==="
 
                         docker compose \
                             -f docker-compose.yml \
@@ -344,8 +346,6 @@ pipeline {
                         docker logout
 
                         echo "=== Deployment completed successfully ==="
-
-                        echo "=== Running containers ==="
 
                         docker compose \
                             -f docker-compose.yml \
