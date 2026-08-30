@@ -4,9 +4,10 @@ title = "FixIt gitleaks config"
 useDefault = true
 
 [allowlist]
-description = "Faux positifs : template NestJS par défaut + artefacts de build Next.js"
+description = "Faux positifs : template NestJS par défaut + artefacts de build Next.js + .env injecté par Jenkins au déploiement"
 regexes = ['''abc123def456''']
 paths = [
   '''\.next/''',
   '''node_modules/''',
+  '''backend/\.env$''',
 ]

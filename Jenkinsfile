@@ -13,6 +13,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                sh 'git clean -fdx'
                 checkout scm
             }
         }
