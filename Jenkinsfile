@@ -317,39 +317,44 @@ pipeline {
                         credentialsId: 'dockerhub-creds',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
-                    )
+                    ),
+                    file(
+                        credentialsId: 'backend-env-file',
+                        variable: 'ENV_FILE'
+                   )
                 ]) {
 
                     sh '''
                         echo "=== Starting deployment ==="
 
-                        export DOCKERHUB_USER=$DOCKER_USER
+                export DOCKERHUB_USER=$DOCKER_USER
 
-                        echo "$DOCKER_PASS" | docker login \
-                         -u "$DOCKER_USER" \
-                         --password-stdin
+                echo "$DOCKER_PASS" | docker login \
+                    -u "$DOCKER_USER" \
+                    --password-stdin
 
-                        cd /home/ubuntu/fixit
+                echo "=== Injecting backend .env ==="
+                cp "$ENV_FILE" backend/.env
 
-                        echo "=== Pulling latest backend and frontend images ==="
+                echo "=== Pulling latest backend and frontend images ==="
 
-                        docker compose \
-                            -f docker-compose.yml \
-                            pull backend frontend
+                docker compose \
+                    -f docker-compose.yml \
+                    pull backend frontend
 
-                        echo "=== Restarting backend and frontend ==="
+                echo "=== Restarting backend and frontend ==="
 
-                        docker compose \
-                            -f docker-compose.yml \
-                            up -d backend frontend
+                docker compose \
+                    -f docker-compose.yml \
+                    up -d backend frontend
 
-                        docker logout
+                docker logout
 
-                        echo "=== Deployment completed successfully ==="
+                echo "=== Deployment completed successfully ==="
 
-                        docker compose \
-                            -f docker-compose.yml \
-                            ps
+                docker compose \
+                    -f docker-compose.yml \
+                    ps
                     '''
                 }
             }
