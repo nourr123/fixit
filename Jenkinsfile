@@ -339,12 +339,14 @@ pipeline {
                 echo "=== Pulling latest backend and frontend images ==="
 
                 docker compose \
+                    -p fixit \
                     -f docker-compose.yml \
                     pull backend frontend
 
                 echo "=== Restarting backend and frontend ==="
 
                 docker compose \
+                    -p fixit \
                     -f docker-compose.yml \
                     up -d backend frontend
 
@@ -353,6 +355,7 @@ pipeline {
                 echo "=== Deployment completed successfully ==="
 
                 docker compose \
+                    -p fixit \
                     -f docker-compose.yml \
                     ps
                     '''
