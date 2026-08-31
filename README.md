@@ -150,6 +150,7 @@ The application will be available at:
 4. The ticket is stored in PostgreSQL.
 5. The ticket appears on the Kanban board.
 6. The property manager updates the ticket status until completion.
+7. The tenant receives an email notification whenever the status of their request changes.
 
 ---
 
